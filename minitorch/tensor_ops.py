@@ -268,8 +268,18 @@ def tensor_map(fn: Callable[[float], float]) -> Any:
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
+        # map index
+        out_index, in_index = np.array(out_shape), np.array(in_shape)
+        # data process
+        for out_pos in range(len(out)):
+            to_index(out_pos, out_shape, out_index)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            in_pos = index_to_position(in_index, in_strides)
+            assert out_pos == index_to_position(out_index, out_strides)
+            out[out_pos] = fn(in_storage[in_pos])
+
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # raise NotImplementedError("Need to implement for Task 2.3")
 
     return _map
 
@@ -318,8 +328,17 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Any:
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
+        out_index, a_index, b_index = np.array(out_shape), np.array(a_shape), np.array(b_shape)
+        for out_pos in range(len(out)):
+            to_index(out_pos, out_shape, out_index)
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            a_pos, b_pos = index_to_position(a_index, a_strides), index_to_position(b_index, b_strides)
+            assert out_pos == index_to_position(out_index, out_strides)
+            out[out_pos] = fn(float(a_storage[a_pos]), float(b_storage[b_pos]))
+
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # raise NotImplementedError("Need to implement for Task 2.3")
 
     return _zip
 
@@ -354,8 +373,19 @@ def tensor_reduce(fn: Callable[[float, float], float]) -> Any:
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
+        # out_shape will be the same as a_shape
+        out_index = np.array(out_shape)
+        for out_pos in range(len(out)):
+            to_index(out_pos, out_shape, out_index)
+            a_index = out_index.copy()
+            for _i in range(a_shape[reduce_dim]):
+                a_index[reduce_dim] = _i
+                a_pos = index_to_position(a_index, a_strides)
+                assert out_pos == index_to_position(out_index, out_strides)
+                out[out_pos] = fn(a_storage[a_pos], out[out_pos])
+
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # raise NotImplementedError("Need to implement for Task 2.3")
 
     return _reduce
 

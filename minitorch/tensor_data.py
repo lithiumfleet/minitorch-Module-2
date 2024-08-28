@@ -44,8 +44,8 @@ def index_to_position(index: Index, strides: Strides) -> int:
     """
 
     pos = 0
-    for i,s in zip(index, strides):
-        pos += i * s
+    for i,v in enumerate(index) :
+        pos += v * strides[i]
     return pos
     # TODO: Implement for Task 2.1.
     # raise NotImplementedError("Need to implement for Task 2.1")
@@ -64,7 +64,7 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    for i in range(len(out_index)):
+    for i in range(len(out_index)-1, -1, -1):
         out_index[i] = ordinal % shape[i]
         ordinal //= shape[i]
     # TODO: Implement for Task 2.1.
@@ -112,25 +112,28 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # pad
-    shape1, shape2 = [i for i in shape1], [j for j in shape2]
-    len1, len2 = len(shape1), len(shape2)
+        # pad
+    s1, s2 = list(shape1), list(shape2)
+    len1, len2 = len(s1), len(s2)
     if len1 > len2:
-        shape2 = [1]*(len1-len2) + shape2
-    if len2 > len1:
-        shape1 = [1]*(len2-len1) + shape1
-    # broadcast
-    out_shape = []
-    for s1, s2 in zip(shape1, shape2):
-        if s1 == 1:
-            out_shape.append(s2)
-        elif s2 == 1:
-            out_shape.append(s1)
-        elif s1 == s2:
-            out_shape.append(s1)
+        s2 = [1]*(len1-len2) + s2
+    else:
+        s1 = [1]*(len2-len1) + s1
+    
+    # new shape
+    res = []
+    for _i in range(len(s1)-1, -1, -1):
+        d1, d2 = s1[_i], s2[_i]
+        if d1 == d2:
+            res.append(d1)
+        elif d1 == 1:
+            res.append(d2)
+        elif d2 == 1:
+            res.append(d1)
         else:
-            raise IndexingError
-    return tuple(out_shape)
+            raise IndexingError(f"Can not broadcast {shape1} with {shape2}")
+    res.reverse()
+    return tuple(res)
     # TODO: Implement for Task 2.2.
     # raise NotImplementedError("Need to implement for Task 2.2")
 
